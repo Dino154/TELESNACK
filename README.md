@@ -1,7 +1,5 @@
 # 🍭 Tele Snack - Sistema de Gestión de Inventario y Ventas
 
-![Tele Snack Banner](https://via.placeholder.com/1000x300/8e44ad/ffffff?text=Tele+Snack+-+El+Lado+Dulce+de+la+Gesti%C3%B3n)
-
 **Tele Snack** es una aplicación web moderna, responsiva y segura diseñada para administrar ventas, inventarios y cuentas por cobrar (fiados) de manera eficiente en entornos con múltiples sedes. Cuenta con una Tienda Interactiva para los clientes y un Panel Administrativo completo (Dashboard) para los gerentes.
 
 ## ✨ Características Principales
