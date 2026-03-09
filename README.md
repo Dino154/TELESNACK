@@ -51,7 +51,7 @@ El sistema cuenta con acceso jerárquico basado en el perfil del usuario:
 
 1. Clona este repositorio en tu máquina local:
    ```bash
-   git clone [https://github.com/Dino154/TELESNACK.git](https://github.com/Dino154/TELESNACK.git)
+   git clone [https://github.com/Dino154/TELESNACK.git]
 
 2. Abre la carpeta del proyecto.
 
