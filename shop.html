@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tele Snack - Tienda</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* ================= ESTILOS BASE ================= */
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border-radius: 0 0 15px 15px; }
+        .nav-left { display: flex; align-items: center; gap: 20px; }
+        
+        .shop-layout { 
+            display: grid; 
+            grid-template-columns: 1fr 340px; 
+            gap: 25px; 
+            align-items: start; 
+            padding: 0 20px 100px 20px; 
+        }
+        
+        .cart-card { 
+            background: white; padding: 20px; border-radius: 15px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
+            position: sticky; top: 20px; 
+        }
+
+        .search-wrapper { position: relative; margin-bottom: 25px; width: 100%; }
+        .search-wrapper input {
+            width: 100%; padding: 15px 20px 15px 50px; border: 2px solid #f3e5f5;
+            border-radius: 50px; font-size: 1rem; outline: none; transition: all 0.3s;
+            background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.03); box-sizing: border-box;
+        }
+        .search-wrapper input:focus { border-color: #d660a9; box-shadow: 0 4px 15px rgba(214, 96, 169, 0.2); }
+        .search-wrapper i { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 24px; }
+
+        #security-badge {
+            position: fixed; bottom: 20px; right: 20px; background: white;
+            padding: 12px 25px; border-radius: 50px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 12px; font-weight: 800;
+            color: #8e44ad; border: 2px solid #f3e5f5; z-index: 99999;
+            font-family: 'Segoe UI', sans-serif; font-size: 1.1rem; transition: all 0.3s ease;
+        }
+        #security-badge.warning { background: #ff5252; color: white; border-color: #ff1744; animation: pulse 0.8s infinite; }
+        
+        #badge-deuda {
+            position: fixed; bottom: 90px; right: 20px; background: white;
+            padding: 10px 20px; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 8px; font-weight: 800; color: #888; 
+            border: 2px solid #eee; z-index: 99999; font-family: 'Segoe UI', sans-serif; 
+            font-size: 1rem; transition: all 0.3s ease;
+        }
+
+        .grid-products { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+        .product-card { background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.2s; position: relative; display: flex; flex-direction: column; padding: 15px; }
+        .product-card.no-stock { opacity: 0.6; filter: grayscale(1); }
+        .prod-img-box { height: 140px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .prod-img-box img { max-height: 100%; max-width: 100%; object-fit: contain; }
+        .offer-badge { position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; color: white; z-index: 10; }
+        .offer-badge.fire { background: linear-gradient(45deg, #ff5252, #ffb142); }
+
+        .cart-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; gap: 10px; }
+
+        /* ================= RESPONSIVE ================= */
+        @media (max-width: 900px) {
+            .shop-layout { grid-template-columns: 1fr; gap: 30px; }
+            .cart-card { position: static; width: 100%; box-sizing: border-box; }
+        }
+
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; gap: 15px; padding: 15px; }
+            .nav-left { flex-direction: column; gap: 5px; text-align: center; }
+            .grid-products { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+            #security-badge { bottom: 15px; right: 15px; padding: 8px 15px; font-size: 0.9rem; }
+            #badge-deuda { bottom: 65px; right: 15px; padding: 8px 15px; font-size: 0.85rem; }
+            .cart-item { flex-wrap: wrap; }
+            .cart-item > div:first-child { min-width: 100%; margin-bottom: 5px; }
+        }
+
+        @media (max-width: 400px) {
+            .grid-products { grid-template-columns: 1fr 1fr; gap: 10px; } 
+            .product-card { padding: 10px; }
+            .prod-img-box { height: 100px; }
+            .price-tag { font-size: 1.1rem !important; }
+        }
+    </style>
+</head>
+<body style="background: #fdf2f8; margin: 0;">
+
+    <div class="app-container">
+        <nav class="navbar">
+            <div class="nav-left">
+                <div class="nav-brand" style="font-size: 1.2rem; font-weight: bold;">
+                    <i class="material-icons" style="color:var(--candy-orange, #FF9F43); vertical-align: middle;">storefront</i> Tele Snack
+                </div>
+                <div id="user-info" class="user-welcome">
+                    <i class="material-icons" style="font-size:16px; color:#aaa; vertical-align: middle;">person</i>
+                    <span>Cargando...</span>
+                </div>
+            </div>
+            <div>
+                <button onclick="window.logoutSistema()" class="btn-outline red" style="border-radius: 50px; padding: 8px 20px; border: 1px solid #ff5252; color: #ff5252; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                    <i class="material-icons" style="font-size:18px">logout</i> Salir
+                </button>
+            </div>
+        </nav>
+
+        <div class="shop-layout">
+            <div>
+                <h2 style="margin-bottom: 20px; color: var(--candy-purple, #8e44ad); font-size: 1.5rem;">
+                    🍭 Productos Disponibles
+                </h2>
+                <div class="search-wrapper">
+                    <i class="material-icons">search</i>
+                    <input type="text" id="shop-search" placeholder="Buscar galletas, bebidas...">
+                </div>
+                <div id="grid-productos" class="grid-products"></div>
+            </div>
+
+            <div class="cart-card">
+                <h3 style="color: var(--candy-orange, #FF9F43); display:flex; align-items:center; gap:10px; margin-top: 0;">
+                    <i class="material-icons">shopping_bag</i> Tu Canasta
+                </h3>
+                <div id="cart-items" class="cart-list">
+                    <div style="text-align:center; color:#ccc; margin-top:30px;">
+                        <i class="material-icons" style="font-size:40px; margin-bottom:10px;">production_quantity_limits</i>
+                        <p>Carrito vacío</p>
+                    </div>
+                </div>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 15px; margin-top: 20px;">
+                    <div style="display:flex; justify-content:space-between; font-size:1.2rem; font-weight:800; color:var(--text-dark, #333); margin-bottom:15px;">
+                        <span>Total:</span>
+                        <span>S/ <span id="cart-total">0.00</span></span>
+                    </div>
+                    <button id="btn-checkout" class="btn-sweet" style="width:100%; background: linear-gradient(90deg, #FF9F43, #FF6BAD); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 107, 173, 0.4);">
+                        PAGAR AHORA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="badge-deuda">
+        <i class="material-icons fa-spin">sync</i> ...
+    </div>
+
+    <div id="security-badge">
+        <i class="material-icons">timer</i>
+        <span>Cierre en: <span id="timer-count">40</span>s</span>
+    </div>
+
+    <script type="module">
+        import { DataService } from './js/services/dataService.js';
+        import { Auth } from './js/services/auth.js';
+
+        // 1. Escudo Anti-Atrás (Evita revivir sesión fantasma)
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                if (!Auth.getCurrentUser()) {
+                    window.location.replace('index.html');
+                }
+            }
+        });
+
+        // --- VARIABLES GLOBALES ---
+        let carrito = [];
+        let productosGlobal = [];
+        let usuarioActual = null;
+        const LIMITE_CREDITO = 30.00; 
+
+        // Configuración Reloj
+        const TIEMPO_INICIAL = 40; 
+        let contadorSegundos = TIEMPO_INICIAL;
+        const badgeElement = document.getElementById('security-badge');
+        const counterElement = document.getElementById('timer-count');
+
+        // --- INICIO ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            usuarioActual = Auth.getCurrentUser();
+            if (!usuarioActual) {
+                window.location.replace('index.html');
+                return;
+            }
+
+            const infoDiv = document.getElementById('user-info');
+            if(infoDiv) {
+                const nombreLimpio = usuarioActual.nombre.replace(/['"]/g, '');
+                infoDiv.innerHTML = `
+                    <i class="material-icons" style="font-size:16px; color:#aaa; vertical-align: middle;">person</i> 
+                    <b>${nombreLimpio}</b> 
+                    <span style="color:#888; margin-left:5px">(${usuarioActual.sede})</span>
+                `;
+            }
+
+            // INICIAR LÓGICAS
+            iniciarReloj();
+            actualizarDeuda();
+
+            document.getElementById('btn-checkout').addEventListener('click', abrirModalPago);
+            const inputSearch = document.getElementById('shop-search');
+            if (inputSearch) {
+                inputSearch.addEventListener('input', (e) => {
+                    const termino = e.target.value.toLowerCase().trim();
+                    const filtrados = productosGlobal.filter(p => p.nombre.toLowerCase().includes(termino));
+                    renderGrid(filtrados);
+                });
+            }
+
+            // OBTENER LA VERSIÓN FRESCA DEL USUARIO (Por si lo bloquearon/desactivaron mientras no miraba)
+            try {
+                const usuariosDB = await DataService.getUsuarios('Global');
+                const userFresco = usuariosDB.find(u => u.id === usuarioActual.id || u.user === usuarioActual.user);
+                
+                if (userFresco) {
+                    usuarioActual = userFresco;
+                    Auth.setUser(usuarioActual); // Actualiza la caché local
+                    
+                    // Si lo acaban de desactivar, lo botamos
+                    if (usuarioActual.activo === false) {
+                        Swal.fire({icon: 'error', title: 'Cuenta Desactivada', text: 'Tu acceso fue revocado.', showConfirmButton:false, timer:2500});
+                        setTimeout(() => Auth.logout(), 2500);
+                        return;
+                    }
+                }
+            } catch(e) { console.warn("No se pudo refrescar datos de usuario"); }
+
+            await cargarInventario();
+        });
+
+        // --- FUNCIÓN NUEVA: CALCULAR DEUDA FLOTANTE ---
+        async function actualizarDeuda() {
+            const badge = document.getElementById('badge-deuda');
+            if(!badge) return;
+
+            try {
+                const ventas = await DataService.getVentas('Global'); 
+                const miNombre = usuarioActual.nombre.toLowerCase().replace(/['"]/g, '').trim();
+
+                const total = ventas
+                    .filter(v => {
+                        const uVenta = (v.user || '').toLowerCase().replace(/['"]/g, '').trim();
+                        return uVenta === miNombre && v.metodo === 'Pendiente';
+                    })
+                    .reduce((sum, v) => sum + parseFloat(v.total), 0);
+
+                if (total > 0) {
+                    badge.style.borderColor = '#ff1744';
+                    badge.style.color = '#d32f2f';
+                    badge.style.backgroundColor = '#ffebee';
+                    badge.innerHTML = `<i class="material-icons">money_off</i> Deuda: S/ ${total.toFixed(2)}`;
+                } else {
+                    badge.style.borderColor = '#00e676';
+                    badge.style.color = '#2e7d32';
+                    badge.style.backgroundColor = '#e8f5e9';
+                    badge.innerHTML = `<i class="material-icons">check_circle</i> S/ 0.00`;
+                }
+            } catch (e) {
+                console.error("Error deuda", e);
+                badge.innerText = "Error red";
+            }
+        }
+
+        // --- RELOJ ---
+        function iniciarReloj() {
+            setInterval(() => {
+                contadorSegundos--;
+                if (counterElement) counterElement.innerText = contadorSegundos;
+                if (contadorSegundos <= 10) badgeElement.classList.add('warning'); 
+                else badgeElement.classList.remove('warning');
+                if (contadorSegundos <= 0) Auth.logout();
+            }, 1000);
+        }
+        function resetearReloj() { contadorSegundos = TIEMPO_INICIAL; badgeElement.classList.remove('warning'); }
+        window.onclick = resetearReloj; window.onmousemove = resetearReloj; window.onkeypress = resetearReloj; window.ontouchstart = resetearReloj;
+
+        // --- INVENTARIO ---
+        async function cargarInventario() {
+            const grid = document.getElementById('grid-productos');
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999"><i class="material-icons fa-spin">refresh</i> Cargando...</div>';
+            try {
+                const sedeQuery = usuarioActual.sede === 'Global' ? null : usuarioActual.sede;
+                productosGlobal = await DataService.getInventario(sedeQuery);
+                productosGlobal.sort((a, b) => {
+                    if (a.stock > 0 && b.stock <= 0) return -1;
+                    if (a.stock <= 0 && b.stock > 0) return 1;
+                    if (a.condicion === 'REMATE' && b.condicion !== 'REMATE') return -1;
+                    return 0;
+                });
+                renderGrid(productosGlobal);
+            } catch (error) { grid.innerHTML = '<p style="color:red; text-align:center">Error de conexión.</p>'; }
+        }
+
+        // --- RENDER GRID ---
+        function renderGrid(lista) {
+            const grid = document.getElementById('grid-productos');
+            grid.innerHTML = '';
+            if (lista.length === 0) return grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#999">No encontrado</div>';
+
+            lista.forEach(prod => {
+                const sinStock = prod.stock <= 0;
+                const esRemate = prod.condicion === 'REMATE';
+                const imgUrl = prod.img || 'img/no-image.png';
+                let badgeHTML = !sinStock 
+                    ? (esRemate ? `<div class="offer-badge fire">¡REMATE!</div>` : `<div class="offer-badge" style="background:#2ecc71">NUEVO</div>`)
+                    : `<div class="offer-badge" style="background:#999">AGOTADO</div>`;
+                
+                const btnHTML = sinStock 
+                    ? `<button class="btn-disabled" disabled style="background:#ccc; color:white; border:none; width:40px; height:40px; border-radius:12px;">X</button>`
+                    : `<button class="btn-icon-action" style="background:#FF6BAD; color:white; border:none; width:40px; height:40px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center;" onclick="window.agregarItem('${prod.id}')"><i class="material-icons">add</i></button>`;
+
+                const card = document.createElement('div');
+                card.className = `product-card ${sinStock ? 'no-stock' : ''}`;
+                card.innerHTML = `
+                    ${badgeHTML}
+                    <div class="prod-img-box"><img src="${imgUrl}" onerror="this.src='img/no-image.png'"></div>
+                    <div class="card-info" style="display:flex; flex-direction:column; flex:1;">
+                        <h3 style="margin: 0 0 5px 0; font-size: 1rem; color: #333;">${prod.nombre}</h3>
+                        <p style="color:#666; font-size:0.9rem; margin: 0 0 10px 0;">Stock: <b>${prod.stock}</b></p>
+                        <div style="margin-top:auto; display:flex; justify-content:space-between; align-items:center;">
+                            <div class="price-tag" style="margin:0; font-size:1.3rem; font-weight: bold; color: #8e44ad;">S/ ${parseFloat(prod.precio).toFixed(2)}</div>
+                            ${btnHTML}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- CARRITO ---
+        window.agregarItem = (id) => {
+            const prod = productosGlobal.find(p => p.id === id);
+            if(!prod || prod.stock <= 0) return Swal.fire({ icon:'warning', title:'Sin stock', timer:1000, showConfirmButton:false });
+            const item = carrito.find(i => i.id === id);
+            if(item) {
+                if(item.cantidad + 1 > prod.stock) return Swal.fire({ icon:'warning', title:'Stock máximo', timer:1000, showConfirmButton:false });
+                item.cantidad++;
+            } else { carrito.push({...prod, cantidad:1}); }
+            renderCart();
+            const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 1000 });
+            Toast.fire({ icon: 'success', title: `+1 ${prod.nombre}` });
+        };
+
+        window.restarItem = (id) => {
+            const item = carrito.find(i => i.id === id);
+            if(item) {
+                item.cantidad--;
+                if(item.cantidad <= 0) carrito = carrito.filter(i => i.id !== id);
+                renderCart();
+            }
+        };
+
+        window.borrarItem = (id) => { carrito = carrito.filter(i => i.id !== id); renderCart(); };
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+            if(carrito.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:30px;"><i class="material-icons" style="font-size:40px;">remove_shopping_cart</i><p>Vacío</p></div>';
+                totalEl.innerText = '0.00';
+                return;
+            }
+            let total = 0;
+            container.innerHTML = carrito.map(item => {
+                const sub = item.precio * item.cantidad;
+                total += sub;
+                return `
+                    <div class="cart-item">
+                        <div style="flex:1">
+                            <h4 style="margin: 0; font-size: 0.95rem;">${item.nombre}</h4>
+                            <small style="color:#888;">S/ ${item.precio.toFixed(2)} unit</small>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <button onclick="window.restarItem('${item.id}')" style="border:none; background:#eee; width:25px; height:25px; border-radius:5px; cursor:pointer;">-</button>
+                            <b style="width: 20px; text-align: center;">${item.cantidad}</b>
+                            <button onclick="window.agregarItem('${item.id}')" style="border:none; background:#eee; width:25px; height:25px; border-radius:5px; cursor:pointer;">+</button>
+                        </div>
+                        <div style="width:60px; text-align:right; font-weight:bold; color: #333;">S/ ${sub.toFixed(2)}</div>
+                        <button onclick="window.borrarItem('${item.id}')" style="border:none; background:none; color:#ff5252; cursor:pointer; padding: 5px;"><i class="material-icons">close</i></button>
+                    </div>`;
+            }).join('');
+            totalEl.innerText = total.toFixed(2);
+        }
+
+        // --- PAGO CON QR YAPE BONITO Y VALIDACIÓN DE FIADO ---
+        async function abrirModalPago() {
+            if (carrito.length === 0) return Swal.fire('Carrito vacío', '', 'warning');
+            
+            const totalVenta = carrito.reduce((sum, i) => sum + (i.precio * i.cantidad), 0);
+            
+            Swal.showLoading();
+            let deudaActual = 0;
+            try {
+                const ventas = await DataService.getVentas('Global');
+                const miNombre = usuarioActual.nombre.toLowerCase().replace(/['"]/g, '').trim();
+                deudaActual = ventas.filter(v => (v.user||'').toLowerCase().replace(/['"]/g, '').trim() === miNombre && v.metodo === 'Pendiente').reduce((s,v)=>s+parseFloat(v.total),0);
+            } catch(e) { console.error(e); }
+            Swal.close();
+
+            // =================================================================
+            // 🚨 VALIDACIÓN DE FIADO AUTOMÁTICA
+            // Leemos la propiedad puedeFiar (si es explícitamente false, lo bloquea).
+            // =================================================================
+            const estaCastigado = usuarioActual.puedeFiar === false;
+            // =================================================================
+
+            const saldoDisponible = LIMITE_CREDITO - deudaActual;
+            const textoPendiente = saldoDisponible <= 0 
+                ? `Fiado <br><small style="color:red">🚫 AGOTADO (Debes S/ ${deudaActual.toFixed(2)})</small>` 
+                : `Fiado <br><small style="color:#666">Disponible: S/ ${saldoDisponible.toFixed(2)}</small>`;
+
+            let opcionesDePago = { 'Yape': 'Yape (QR)', 'Efectivo': 'Efectivo' };
+
+            // Si NO está castigado, le agregamos la opción de Fiado
+            if (!estaCastigado) {
+                opcionesDePago['Pendiente'] = textoPendiente;
+            }
+
+            const mensajeHTML = estaCastigado 
+                ? '<p style="color:#e74c3c; font-weight:bold; margin: 15px 0;">⚠️ Opción de crédito deshabilitada por Administración.</p>'
+                : '<p style="color:#888; margin: 15px 0;">Selecciona método de pago</p>';
+
+            const { value: metodo } = await Swal.fire({
+                title: `Total: S/ ${totalVenta.toFixed(2)}`,
+                html: mensajeHTML,
+                input: 'radio',
+                inputOptions: opcionesDePago,
+                inputValidator: (v) => !v && 'Selecciona una opción',
+                confirmButtonColor: '#8E44AD', confirmButtonText: 'Continuar', showCancelButton: true
+            });
+
+            if (!metodo) return;
+
+            if (metodo === 'Pendiente') {
+                if (saldoDisponible <= 0) return Swal.fire('Crédito Agotado', `Has alcanzado tu límite. Paga tu deuda.`, 'error');
+                if (totalVenta > saldoDisponible) return Swal.fire('Crédito Insuficiente', `Solo tienes S/ ${saldoDisponible.toFixed(2)} disponibles.`, 'error');
+            }
+
+            let op = '';
+            if (metodo === 'Yape') {
+                const { value: cod } = await Swal.fire({
+                    title: '<strong style="color:#8E44AD">¡Yapea aquí!</strong>',
+                    html: `<div style="text-align:center;background:#FFF0F6;padding:15px;border-radius:15px;"><p style="font-size:1.1rem;font-weight:bold;margin-bottom:10px;">Monto a pagar: <span style="color:#8E44AD">S/ ${totalVenta.toFixed(2)}</span></p><img src="https://static.wixstatic.com/media/db69a5_32ad714f297d4f03a19c4a5c79a355fd~mv2.jpeg" style="width:220px;border-radius:15px;border:4px solid #FF6BAD;box-shadow:0 5px 15px rgba(0,0,0,0.1);margin-bottom:15px;"><p style="color:#555;font-size:0.9rem;margin-bottom:5px;">Últimos 3 dígitos:</p><input id="swal-input-yape" type="number" class="swal2-input" placeholder="Ej: 930" maxlength="3" style="font-size:2rem;text-align:center;letter-spacing:5px;width:150px;margin:5px auto;border:2px solid #FF6BAD;color:#8E44AD;font-weight:bold;"></div>`,
+                    confirmButtonText: 'Confirmar', confirmButtonColor: '#00C49A', showCancelButton: true,
+                    preConfirm: () => { const v = document.getElementById('swal-input-yape').value; if (!v || v.length < 3) Swal.showValidationMessage('¡Faltan los 3 dígitos!'); return v; }
+                });
+                if(!cod) return;
+                op = cod;
+            }
+
+            Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading() });
+            try {
+                await DataService.registrarVenta({
+                    user: usuarioActual.nombre,
+                    sede: usuarioActual.sede,
+                    total: totalVenta,
+                    items: carrito.map(i => ({ nombre:i.nombre, cantidad:i.cantidad, precio:i.precio, costo:i.costo||0 })),
+                    metodo: metodo,
+                    codigoOperacion: op,
+                    fecha: new Date().toLocaleString(),
+                    timestamp: Date.now()
+                });
+                await Swal.fire({ icon: 'success', title: 'Venta Registrada', timer: 1500, showConfirmButton: false });
+                carrito = [];
+                renderCart();
+                await cargarInventario();
+                actualizarDeuda(); 
+            } catch (e) {
+                Swal.fire('Error', 'Fallo al registrar', 'error');
+            }
+        }
+
+        window.logoutSistema = () => Auth.logout();
+    </script>
+</body>
+</html>

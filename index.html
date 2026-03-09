@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tele Snack - Ingreso</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="candy-bg">
+
+    <div class="login-card">
+        <div class="login-visual">
+            <div class="visual-content">
+                <h1>Tele Snack</h1>
+                <p>El lado dulce de la gestión</p>
+            </div>
+        </div>
+
+        <div class="login-form-side">
+            <div class="login-header">
+                <h2>¡Hola de nuevo!</h2>
+                <p>Ingresa tus credenciales para continuar</p>
+            </div>
+
+            <form id="form-login">
+                <div class="input-group">
+                    <i class="material-icons">person</i>
+                    <input type="text" id="login-user" placeholder="Usuario" autocomplete="off" required>
+                </div>
+                <div class="input-group">
+                    <i class="material-icons">lock</i>
+                    <input type="password" id="login-pin" placeholder="PIN (6 dígitos)" maxlength="6" pattern="\d{6}" autocomplete="new-password" required>
+                </div>
+                <button type="submit" class="btn-sweet">INGRESAR AL SISTEMA</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { Auth } from './js/services/auth.js';
+        
+        // Función que redirige si hay alguien logueado
+        function verificarEscudo() {
+            const user = Auth.getCurrentUser();
+            if (user) {
+                // Si el usuario ya está en el sistema, lo botamos de la pantalla de login
+                if (user.rol === 'SuperAdmin' || user.rol === 'AdminSede') {
+                    window.location.replace('admin.html');
+                } else {
+                    window.location.replace('shop.html');
+                }
+            }
+        }
+
+        // 1. Escudo al cargar la página normal
+        document.addEventListener('DOMContentLoaded', verificarEscudo);
+
+        // 2. Escudo si usan el botón "Atrás" del navegador (Bfcache)
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                verificarEscudo();
+            }
+        });
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
