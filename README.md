@@ -60,14 +60,3 @@ El sistema cuenta con acceso jerárquico basado en el perfil del usuario:
 4. Nota sobre el Backend: Las transacciones y la persistencia de datos están manejadas a través de DataService.js. Asegúrate de tener configurado correctamente tu proveedor de base de datos (Ej: Firebase / localStorage temporal) dentro de la carpeta services/.
 
 Desarrollado con ❤️ por Diego Parodi
-
-
-### ¿Cómo subirlo a GitHub con este archivo?
-
-1. Guarda tu código actual, incluyendo el nuevo `README.md`.
-2. Abre tu terminal (en VS Code o consola) en la carpeta de tu proyecto.
-3. Ejecuta estos comandos:
-   ```bash
-   git add .
-   git commit -m "Agregado escudo anti-atrás, exportación PDF y bloqueo de usuarios"
-   git push origin main
